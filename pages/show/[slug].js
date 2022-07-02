@@ -39,8 +39,16 @@ const Portrait = ({ images = [] }) => {
   return null
 }
 
-export default function Shows({ show }) {
-  return (
+export default function Shows({ show, notFound }) {
+  // Couldn't get conditional rendering to work with notFound - so I did a rerout to an the error page instead.
+  if(notFound) return (
+  <Layout>
+    <h1>404</h1>
+    <h2>Nothing to see here!</h2>
+  </Layout>
+  )
+  
+   return (
     <Layout title={`${show.title} / next-graphcms-shows`} maxWidth="900px" padding="0 2em">
       <Title>{show.title}</Title>
 
@@ -53,18 +61,11 @@ export default function Shows({ show }) {
 
       {show.artists.map(artist => (
         <div key={artist.id}>
-          <ArtistName>{artist.fullName}</ArtistName>
+          <a href={`/artist/${artist.slug}`} header={artist.fullName} key={artist.id}>
+            <ArtistName>{artist.fullName}</ArtistName>
 
-          <Portrait images={artist.images} />
-
-          <FlexyRow justify="flex-start">
-            <a href={artist.webUrl} target="_blank">Website</a>
-            <a href={artist.facebookUrl} target="_blank">Facebook</a>
-            <a href={artist.instagramUrl} target="_blank">Instagram</a>
-            <a href={artist.youTubeUrl} target="_blank">YouTube</a>
-          </FlexyRow>
-
-          <Markdown source={artist.bio} />
+            <Portrait images={artist.images} />
+          </a>
         </div>
       ))}
     </Layout>
@@ -75,7 +76,19 @@ export async function getServerSideProps({ params }) {
   const { slug } = params
   const show = (await getShowBySlug(slug))
 
+  if(!show) {
+    return {
+      // Couldn't get conditional rendering to work with notFound
+      // notFound: true,
+      redirect: {
+        destination: '/error',
+        permanent: false,
+      }
+    }  
+  }
+
   return {
     props: { show },
+    
   }
 }
